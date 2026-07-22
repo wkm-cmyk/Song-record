@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -19,6 +19,10 @@
         .btn-cancel-edit { background-color: #95a5a6; color: white; }
         .btn-export { background-color: #2980b9; color: white; }
         
+        /* 新增：拍照辨識按鈕樣式 */
+        .btn-scan { background-color: #8e44ad; color: white; }
+        .btn-scan:disabled { background-color: #bb8fce; cursor: not-allowed; }
+
         /* 操作按鈕容器：強制上下（垂直）排列並靠右 */
         .btn-action-group {
             display: flex;
@@ -127,8 +131,14 @@
         <input type="text" id="composer" list="composerList" placeholder="作曲家 (Composer) (選填)" autocomplete="off">
         <datalist id="composerList"></datalist>
 
+        <!-- 按鈕區 -->
         <button id="submitBtn" class="btn-add" onclick="handleSubmit()">➕ 新增記錄</button>
         <button id="cancelBtn" class="btn-cancel-edit" onclick="cancelEdit()" style="display: none;">✖️ 取消</button>
+        
+        <!-- 新增：拍照 / 相片辨識按鈕 -->
+        <button id="scanBtn" class="btn-scan" onclick="document.getElementById('imageInput').click()">📷 拍照辨識</button>
+        <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;" onchange="processImage(this)">
+        
         <button class="btn-export" onclick="exportToExcel()">📊 匯出至 Excel</button>
     </div>
 
@@ -141,7 +151,7 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxLNIX5-v2gyojTBAylf93lMpOxBM4B2G2xw5CG8ZfhHLw9YViVRE6W5y211u--N4H9/exec';
     
     let records = [];
-    let editingId = null; // 當前正在修改的記錄 ID
+    let editingId = null;
 
     async function loadRecords() {
         const container = document.getElementById('resultsContainer');
@@ -182,7 +192,53 @@
         });
     }
 
-    // 處理「新增」或「儲存修改」
+    // 處理圖片辨識
+    async function processImage(input) {
+        if (!input.files || !input.files[0]) return;
+
+        const file = input.files[0];
+        const scanBtn = document.getElementById('scanBtn');
+        scanBtn.textContent = '⏳ AI 辨識中...';
+        scanBtn.disabled = true;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Image = e.target.result.split(',')[1];
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'ocr_scan',
+                        image: base64Image,
+                        mimeType: file.type || 'image/jpeg'
+                    }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.publisher) document.getElementById('publisher').value = data.publisher;
+                    if (data.bookName) document.getElementById('bookName').value = data.bookName;
+                    if (data.songNameZh) document.getElementById('songNameZh').value = data.songNameZh;
+                    if (data.songNameEn) document.getElementById('songNameEn').value = data.songNameEn;
+                    if (data.composer) document.getElementById('composer').value = data.composer;
+                } else {
+                    alert("❌ 辨識失敗：" + (data.message || "無法讀取圖片內容"));
+                }
+            } catch (error) {
+                console.error("辨識錯誤:", error);
+                alert("❌ 影像處理失敗，請重試。");
+            } finally {
+                scanBtn.textContent = '📷 拍照辨識';
+                scanBtn.disabled = false;
+                input.value = '';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
     async function handleSubmit() {
         const publisher = document.getElementById('publisher').value.trim();
         const bookName = document.getElementById('bookName').value.trim();
@@ -215,13 +271,11 @@
             const result = await response.json();
 
             if (isEdit) {
-                // 更新本機資料
                 const idx = records.findIndex(r => r.id === editingId);
                 if (idx !== -1) {
                     records[idx] = { ...records[idx], publisher, bookName, songNameZh, songNameEn, composer };
                 }
             } else {
-                // 新增至本機資料
                 payload.id = result.id;
                 records.push(payload);
             }
@@ -229,7 +283,6 @@
             clearForm();
             updateDatalists();
             renderRecords();
-            // 已完全移除原本的 alert 提醒！
         } catch (error) {
             console.error('儲存失敗:', error);
             alert("❌ 儲存失敗，請重試。");
@@ -238,7 +291,6 @@
         }
     }
 
-    // 開始修改：將資料帶入輸入框
     function startEdit(id) {
         const item = records.find(r => r.id === id);
         if (!item) return;
@@ -255,12 +307,9 @@
         submitBtn.className = 'btn-save-edit';
         
         document.getElementById('cancelBtn').style.display = 'inline-block';
-
-        // 平滑滾動到頂部表單
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 取消修改
     function cancelEdit() {
         clearForm();
         resetSubmitBtn();
