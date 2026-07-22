@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<PRACTICE MAKES PERFECT>
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -85,12 +85,23 @@
 <div class="container">
     <h1>📚 出版物記錄與搜尋庫</h1>
 
+    <!-- 輸入表單：綁定 datalist 以實現自動提示與比對功能 -->
     <div class="form-group">
-        <input type="text" id="publisher" placeholder="出版社 (Publisher) *" required>
-        <input type="text" id="bookName" placeholder="書名 (Book Name) *" required>
-        <input type="text" id="songNameZh" placeholder="中文歌名 (選填)">
-        <input type="text" id="songNameEn" placeholder="英文歌名 (選填)">
-        <input type="text" id="composer" placeholder="作曲家 (Composer) (選填)">
+        <input type="text" id="publisher" list="publisherList" placeholder="出版社 (Publisher) *" required autocomplete="off">
+        <datalist id="publisherList"></datalist>
+
+        <input type="text" id="bookName" list="bookNameList" placeholder="書名 (Book Name) *" required autocomplete="off">
+        <datalist id="bookNameList"></datalist>
+
+        <input type="text" id="songNameZh" list="songNameZhList" placeholder="中文歌名 (選填)" autocomplete="off">
+        <datalist id="songNameZhList"></datalist>
+
+        <input type="text" id="songNameEn" list="songNameEnList" placeholder="英文歌名 (選填)" autocomplete="off">
+        <datalist id="songNameEnList"></datalist>
+
+        <input type="text" id="composer" list="composerList" placeholder="作曲家 (Composer) (選填)" autocomplete="off">
+        <datalist id="composerList"></datalist>
+
         <button class="btn-add" onclick="addRecord()">➕ 新增記錄</button>
         <button class="btn-export" onclick="exportToExcel()">📊 匯出至 Excel</button>
     </div>
@@ -111,11 +122,39 @@
         try {
             const response = await fetch(API_URL);
             records = await response.json();
+            updateDatalists(); // 載入資料後，建立比對選單
             renderRecords();
         } catch (error) {
             console.error('載入失敗:', error);
             container.innerHTML = '<p style="text-align:center; color:red;">❌ 資料載入失敗，請檢查網路連線或 API 網址。</p>';
         }
+    }
+
+    /* 🔍 動態更新輸入框的比對選單 (Datalist) */
+    function updateDatalists() {
+        const fields = [
+            { id: 'publisherList', key: 'publisher' },
+            { id: 'bookNameList', key: 'bookName' },
+            { id: 'songNameZhList', key: 'songNameZh' },
+            { id: 'songNameEnList', key: 'songNameEn' },
+            { id: 'composerList', key: 'composer' }
+        ];
+
+        fields.forEach(field => {
+            const datalist = document.getElementById(field.id);
+            if (!datalist) return;
+
+            // 擷取該欄位所有不重複且有效的內容
+            const uniqueValues = [...new Set(
+                records
+                    .map(r => r[field.key])
+                    .filter(val => val && val.trim() !== '' && val !== '-')
+            )];
+
+            datalist.innerHTML = uniqueValues
+                .map(val => `<option value="${val.replace(/"/g, '&quot;')}"></option>`)
+                .join('');
+        });
     }
 
     async function addRecord() {
@@ -151,6 +190,7 @@
             document.getElementById('songNameEn').value = '';
             document.getElementById('composer').value = '';
 
+            updateDatalists(); // 新增成功後更新提示列表
             renderRecords();
             alert("✅ 新增成功！");
         } catch (error) {
@@ -176,6 +216,7 @@
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             records = records.filter(record => record.id !== id);
+            updateDatalists(); // 刪除後同步更新提示列表
             renderRecords();
         } catch (error) {
             console.error('刪除失敗:', error);
