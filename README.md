@@ -1,1 +1,204 @@
-# Song-record
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出版物記錄與搜尋庫</title>
+    <!-- 引入 SheetJS 函式庫以支援匯出 Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; }
+        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .form-group input { flex: 1 1 180px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-add { background-color: #27ae60; color: white; }
+        .btn-export { background-color: #2980b9; color: white; }
+        .search-bar { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #3498db; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
+        .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; }
+        .publisher-title { background-color: #34495e; color: white; padding: 10px 15px; margin: 0; font-size: 1.2em; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e1e8ed; }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        tr:hover { background-color: #f1f2f6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 出版物記錄與搜尋庫</h1>
+
+    <div class="form-group">
+        <input type="text" id="publisher" placeholder="出版社 (Publisher) *" required>
+        <input type="text" id="bookName" placeholder="書名 (Book Name) *" required>
+        <!-- 拆分為中英兩個獨立欄位 (非必填) -->
+        <input type="text" id="songNameZh" placeholder="中文歌名 (選填)">
+        <input type="text" id="songNameEn" placeholder="英文歌名 (選填)">
+        <input type="text" id="composer" placeholder="作曲家 (Composer) (選填)">
+        <button class="btn-add" onclick="addRecord()">➕ 新增記錄</button>
+        <button class="btn-export" onclick="exportToExcel()">📊 匯出至 Excel</button>
+    </div>
+
+    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 搜尋書名、中英文歌名、作曲家或出版社..." onkeyup="renderRecords()">
+
+    <div id="resultsContainer"></div>
+</div>
+
+<script>
+    // 這是你剛剛成功部署的專屬 API 網址
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwMW-TY9RwIpVJ1qgBhYClXInJ3uD5siD5zF90KHQyu_V7rUILy4yLI73udgUiRE_tv/exec'; 
+    
+    let records = [];
+
+    // 載入資料
+    async function loadRecords() {
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = '<p style="text-align:center; color:#2980b9;">⏳ 正在從雲端載入資料，請稍候...</p>';
+        
+        try {
+            const response = await fetch(API_URL);
+            records = await response.json();
+            renderRecords();
+        } catch (error) {
+            console.error('載入失敗:', error);
+            container.innerHTML = '<p style="text-align:center; color:red;">❌ 資料載入失敗，請檢查網路連線或確定 Apps Script 已設為「所有人」可存取。</p>';
+        }
+    }
+
+    // 新增記錄
+    async function addRecord() {
+        const publisher = document.getElementById('publisher').value.trim();
+        const bookName = document.getElementById('bookName').value.trim();
+        const songNameZh = document.getElementById('songNameZh').value.trim();
+        const songNameEn = document.getElementById('songNameEn').value.trim();
+        const composer = document.getElementById('composer').value.trim();
+        const btn = document.querySelector('.btn-add');
+
+        if (!publisher || !bookName) {
+            alert("請至少輸入「出版社」與「書名」！");
+            return;
+        }
+
+        const newRecord = { publisher, bookName, songNameZh, songNameEn, composer };
+        
+        btn.textContent = '⏳ 儲存中...';
+        btn.disabled = true;
+
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(newRecord),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                }
+            });
+
+            records.push(newRecord);
+            
+            document.getElementById('publisher').value = '';
+            document.getElementById('bookName').value = '';
+            document.getElementById('songNameZh').value = '';
+            document.getElementById('songNameEn').value = '';
+            document.getElementById('composer').value = '';
+
+            renderRecords();
+            alert("✅ 新增成功！");
+        } catch (error) {
+            console.error('儲存失敗:', error);
+            alert("❌ 儲存失敗，請重試。");
+        } finally {
+            btn.textContent = '➕ 新增記錄';
+            btn.disabled = false;
+        }
+    }
+
+    // 渲染資料與搜尋
+    function renderRecords() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = '';
+
+        const filteredRecords = records.filter(record => {
+            return (record.publisher && record.publisher.toLowerCase().includes(searchTerm)) ||
+                   (record.bookName && record.bookName.toLowerCase().includes(searchTerm)) ||
+                   (record.songNameZh && record.songNameZh.toLowerCase().includes(searchTerm)) ||
+                   (record.songNameEn && record.songNameEn.toLowerCase().includes(searchTerm)) ||
+                   (record.composer && record.composer.toLowerCase().includes(searchTerm));
+        });
+
+        const groupedData = {};
+        filteredRecords.forEach(record => {
+            if (!groupedData[record.publisher]) {
+                groupedData[record.publisher] = [];
+            }
+            groupedData[record.publisher].push(record);
+        });
+
+        const sortedPublishers = Object.keys(groupedData).sort((a, b) => a.localeCompare(b, 'en'));
+
+        if (sortedPublishers.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">找不到符合的記錄。</p>';
+            return;
+        }
+
+        sortedPublishers.forEach(publisher => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'publisher-group';
+            
+            const title = document.createElement('h2');
+            title.className = 'publisher-title';
+            title.textContent = `🏛️ ${publisher}`;
+            groupDiv.appendChild(title);
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>書名</th>
+                        <th>中文歌名</th>
+                        <th>英文歌名</th>
+                        <th>作曲家</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${groupedData[publisher].map(item => `
+                        <tr>
+                            <td>${item.bookName}</td>
+                            <td>${item.songNameZh || '-'}</td>
+                            <td>${item.songNameEn || '-'}</td>
+                            <td>${item.composer || '-'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            groupDiv.appendChild(table);
+            container.appendChild(groupDiv);
+        });
+    }
+
+    // 匯出至 EXCEL 功能
+    function exportToExcel() {
+        if (records.length === 0) {
+            alert("沒有資料可以匯出！");
+            return;
+        }
+
+        const worksheet = XLSX.utils.json_to_sheet(records.map(r => ({
+            "出版社 (Publisher)": r.publisher,
+            "書名 (Book Name)": r.bookName,
+            "中文歌名 (Chinese Song)": r.songNameZh,
+            "英文歌名 (English Song)": r.songNameEn,
+            "作曲家 (Composer)": r.composer
+        })));
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "出版記錄");
+        XLSX.writeFile(workbook, "出版物記錄.xlsx");
+    }
+
+    window.onload = loadRecords;
+</script>
+
+</body>
+</html>
