@@ -1,4 +1,4 @@
-<PRACTICE MAKES PERFECT>
+
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -122,7 +122,7 @@
         try {
             const response = await fetch(API_URL);
             records = await response.json();
-            updateDatalists(); // 載入資料後，建立比對選單
+            updateDatalists();
             renderRecords();
         } catch (error) {
             console.error('載入失敗:', error);
@@ -130,7 +130,7 @@
         }
     }
 
-    /* 🔍 動態更新輸入框的比對選單 (Datalist) */
+    /* 動態更新輸入框的比對選單 (Datalist) */
     function updateDatalists() {
         const fields = [
             { id: 'publisherList', key: 'publisher' },
@@ -144,7 +144,6 @@
             const datalist = document.getElementById(field.id);
             if (!datalist) return;
 
-            // 擷取該欄位所有不重複且有效的內容
             const uniqueValues = [...new Set(
                 records
                     .map(r => r[field.key])
@@ -190,7 +189,7 @@
             document.getElementById('songNameEn').value = '';
             document.getElementById('composer').value = '';
 
-            updateDatalists(); // 新增成功後更新提示列表
+            updateDatalists();
             renderRecords();
             alert("✅ 新增成功！");
         } catch (error) {
@@ -216,7 +215,7 @@
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             records = records.filter(record => record.id !== id);
-            updateDatalists(); // 刪除後同步更新提示列表
+            updateDatalists();
             renderRecords();
         } catch (error) {
             console.error('刪除失敗:', error);
@@ -269,6 +268,7 @@
             title.textContent = `🏛️ ${publisher}`;
             groupDiv.appendChild(title);
 
+            // 先依「書名」排序，再依「中英文歌名」排序
             groupedData[publisher].sort((a, b) => {
                 let cmp = customSort(a.bookName, b.bookName);
                 if (cmp !== 0) return cmp;
@@ -277,20 +277,35 @@
                 return customSort(a.songNameEn, b.songNameEn);
             });
 
+            // 🌟 每當遇到新的書名時，次序從 1 開始重新計算
+            let currentBook = '';
+            let seq = 0;
+            const itemsWithSeq = groupedData[publisher].map(item => {
+                if (item.bookName !== currentBook) {
+                    currentBook = item.bookName;
+                    seq = 1;
+                } else {
+                    seq++;
+                }
+                return { ...item, seq };
+            });
+
             const table = document.createElement('table');
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th style="width: 25%;">書名</th>
+                        <th style="width: 8%;">次序</th>
+                        <th style="width: 24%;">書名</th>
                         <th style="width: 22%;">中文歌名</th>
-                        <th style="width: 22%;">英文歌名</th>
-                        <th style="width: 18%;">作曲家</th>
-                        <th style="width: 13%;"></th>
+                        <th style="width: 21%;">英文歌名</th>
+                        <th style="width: 15%;">作曲家</th>
+                        <th style="width: 10%;"></th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${groupedData[publisher].map(item => `
+                    ${itemsWithSeq.map(item => `
                         <tr>
+                            <td style="color: #7f8c8d; font-weight: bold;">${item.seq}</td>
                             <td>${item.bookName}</td>
                             <td>${item.songNameZh || '-'}</td>
                             <td>${item.songNameEn || '-'}</td>
@@ -312,13 +327,41 @@
             alert("沒有資料可以匯出！");
             return;
         }
-        const worksheet = XLSX.utils.json_to_sheet(records.map(r => ({
-            "出版社 (Publisher)": r.publisher,
-            "書名 (Book Name)": r.bookName,
-            "中文歌名 (Chinese Song)": r.songNameZh,
-            "英文歌名 (English Song)": r.songNameEn,
-            "作曲家 (Composer)": r.composer
-        })));
+
+        // 排序資料並加入次序
+        const sortedRecords = [...records].sort((a, b) => {
+            let cmp = customSort(a.publisher, b.publisher);
+            if (cmp !== 0) return cmp;
+            cmp = customSort(a.bookName, b.bookName);
+            if (cmp !== 0) return cmp;
+            cmp = customSort(a.songNameZh, b.songNameZh);
+            if (cmp !== 0) return cmp;
+            return customSort(a.songNameEn, b.songNameEn);
+        });
+
+        let currentPublisher = '';
+        let currentBook = '';
+        let seq = 0;
+
+        const dataToExport = sortedRecords.map(r => {
+            if (r.publisher !== currentPublisher || r.bookName !== currentBook) {
+                currentPublisher = r.publisher;
+                currentBook = r.bookName;
+                seq = 1;
+            } else {
+                seq++;
+            }
+            return {
+                "次序": seq,
+                "出版社 (Publisher)": r.publisher,
+                "書名 (Book Name)": r.bookName,
+                "中文歌名 (Chinese Song)": r.songNameZh,
+                "英文歌名 (English Song)": r.songNameEn,
+                "作曲家 (Composer)": r.composer
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "出版記錄");
         XLSX.writeFile(workbook, "出版物記錄.xlsx");
