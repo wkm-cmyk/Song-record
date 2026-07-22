@@ -14,7 +14,11 @@
         .form-group input { flex: 1 1 180px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
         button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add { background-color: #27ae60; color: white; }
+        .btn-add:disabled { background-color: #95a5a6; cursor: not-allowed; }
         .btn-export { background-color: #2980b9; color: white; }
+        .btn-delete { background-color: #e74c3c; color: white; padding: 6px 10px; font-size: 0.9em; border-radius: 4px; cursor: pointer; border: none; }
+        .btn-delete:hover { background-color: #c0392b; }
+        .btn-delete:disabled { background-color: #f5b7b1; cursor: not-allowed; }
         .search-bar { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #3498db; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
         .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; }
         .publisher-title { background-color: #34495e; color: white; padding: 10px 15px; margin: 0; font-size: 1.2em; }
@@ -32,7 +36,6 @@
     <div class="form-group">
         <input type="text" id="publisher" placeholder="出版社 (Publisher) *" required>
         <input type="text" id="bookName" placeholder="書名 (Book Name) *" required>
-        <!-- 拆分為中英兩個獨立欄位 (非必填) -->
         <input type="text" id="songNameZh" placeholder="中文歌名 (選填)">
         <input type="text" id="songNameEn" placeholder="英文歌名 (選填)">
         <input type="text" id="composer" placeholder="作曲家 (Composer) (選填)">
@@ -46,27 +49,24 @@
 </div>
 
 <script>
-    // 這是你剛剛成功部署的專屬 API 網址
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwMW-TY9RwIpVJ1qgBhYClXInJ3uD5siD5zF90KHQyu_V7rUILy4yLI73udgUiRE_tv/exec'; 
+    // 已經更換為最新的部署 API 網址
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxLNIX5-v2gyojTBAylf93lMpOxBM4B2G2xw5CG8ZfhHLw9YViVRE6W5y211u--N4H9/exec'; 
     
     let records = [];
 
-    // 載入資料
     async function loadRecords() {
         const container = document.getElementById('resultsContainer');
         container.innerHTML = '<p style="text-align:center; color:#2980b9;">⏳ 正在從雲端載入資料，請稍候...</p>';
-        
         try {
             const response = await fetch(API_URL);
             records = await response.json();
             renderRecords();
         } catch (error) {
             console.error('載入失敗:', error);
-            container.innerHTML = '<p style="text-align:center; color:red;">❌ 資料載入失敗，請檢查網路連線或確定 Apps Script 已設為「所有人」可存取。</p>';
+            container.innerHTML = '<p style="text-align:center; color:red;">❌ 資料載入失敗，請檢查網路連線或 API 網址。</p>';
         }
     }
 
-    // 新增記錄
     async function addRecord() {
         const publisher = document.getElementById('publisher').value.trim();
         const bookName = document.getElementById('bookName').value.trim();
@@ -80,20 +80,18 @@
             return;
         }
 
-        const newRecord = { publisher, bookName, songNameZh, songNameEn, composer };
-        
+        const newRecord = { action: 'add', publisher, bookName, songNameZh, songNameEn, composer };
         btn.textContent = '⏳ 儲存中...';
         btn.disabled = true;
 
         try {
-            await fetch(API_URL, {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify(newRecord),
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                }
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
-
+            const result = await response.json();
+            newRecord.id = result.id;
             records.push(newRecord);
             
             document.getElementById('publisher').value = '';
@@ -113,7 +111,35 @@
         }
     }
 
-    // 渲染資料與搜尋
+    async function deleteRecord(id, btnElement) {
+        if (!confirm("⚠️ 確定要刪除這筆記錄嗎？(此動作無法復原)")) {
+            return; 
+        }
+        btnElement.textContent = '⏳ 刪除中...';
+        btnElement.disabled = true;
+
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'delete', id: id }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            records = records.filter(record => record.id !== id);
+            renderRecords();
+        } catch (error) {
+            console.error('刪除失敗:', error);
+            alert("❌ 刪除失敗，請檢查網路。");
+            btnElement.textContent = '🗑️ 刪除';
+            btnElement.disabled = false;
+        }
+    }
+
+    function customSort(a, b) {
+        const strA = a || '';
+        const strB = b || '';
+        return strA.localeCompare(strB, 'zh-HK', { numeric: true, collation: 'stroke' });
+    }
+
     function renderRecords() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const container = document.getElementById('resultsContainer');
@@ -135,7 +161,7 @@
             groupedData[record.publisher].push(record);
         });
 
-        const sortedPublishers = Object.keys(groupedData).sort((a, b) => a.localeCompare(b, 'en'));
+        const sortedPublishers = Object.keys(groupedData).sort(customSort);
 
         if (sortedPublishers.length === 0) {
             container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">找不到符合的記錄。</p>';
@@ -151,6 +177,14 @@
             title.textContent = `🏛️ ${publisher}`;
             groupDiv.appendChild(title);
 
+            groupedData[publisher].sort((a, b) => {
+                let cmp = customSort(a.bookName, b.bookName);
+                if (cmp !== 0) return cmp;
+                cmp = customSort(a.songNameZh, b.songNameZh);
+                if (cmp !== 0) return cmp;
+                return customSort(a.songNameEn, b.songNameEn);
+            });
+
             const table = document.createElement('table');
             table.innerHTML = `
                 <thead>
@@ -159,6 +193,7 @@
                         <th>中文歌名</th>
                         <th>英文歌名</th>
                         <th>作曲家</th>
+                        <th style="width: 80px; text-align: center;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,6 +203,9 @@
                             <td>${item.songNameZh || '-'}</td>
                             <td>${item.songNameEn || '-'}</td>
                             <td>${item.composer || '-'}</td>
+                            <td style="text-align: center;">
+                                <button class="btn-delete" onclick="deleteRecord('${item.id}', this)">🗑️ 刪除</button>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -177,13 +215,11 @@
         });
     }
 
-    // 匯出至 EXCEL 功能
     function exportToExcel() {
         if (records.length === 0) {
             alert("沒有資料可以匯出！");
             return;
         }
-
         const worksheet = XLSX.utils.json_to_sheet(records.map(r => ({
             "出版社 (Publisher)": r.publisher,
             "書名 (Book Name)": r.bookName,
@@ -191,7 +227,6 @@
             "英文歌名 (English Song)": r.songNameEn,
             "作曲家 (Composer)": r.composer
         })));
-
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "出版記錄");
         XLSX.writeFile(workbook, "出版物記錄.xlsx");
@@ -199,6 +234,5 @@
 
     window.onload = loadRecords;
 </script>
-
 </body>
 </html>
