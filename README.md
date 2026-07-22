@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>出版物記錄與搜尋庫</title>
+    <!-- 引入 SheetJS 函式庫以支援匯出 Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
@@ -15,16 +16,32 @@
         .btn-add { background-color: #27ae60; color: white; }
         .btn-add:disabled { background-color: #95a5a6; cursor: not-allowed; }
         .btn-export { background-color: #2980b9; color: white; }
-        .btn-delete { background-color: #e74c3c; color: white; padding: 6px 10px; font-size: 0.9em; border-radius: 4px; cursor: pointer; border: none; }
+        
+        /* 刪除按鈕：強制不換行 white-space: nowrap */
+        .btn-delete { 
+            background-color: #e74c3c; 
+            color: white; 
+            padding: 6px 12px; 
+            font-size: 0.9em; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            border: none; 
+            white-space: nowrap; 
+            display: inline-block;
+        }
         .btn-delete:hover { background-color: #c0392b; }
         .btn-delete:disabled { background-color: #f5b7b1; cursor: not-allowed; }
+        
         .search-bar { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #3498db; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
         .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; }
-        .publisher-title { background-color: #34495e; color: white; padding: 10px 15px; margin: 0; font-size: 1.2em; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e1e8ed; }
-        th { background-color: #f8f9fa; font-weight: 600; }
-        tr:hover { background-color: #f1f2f6; }
+        .publisher-title { background-color: #34495e; color: white; padding: 12px 15px; margin: 0; font-size: 1.2em; }
+        
+        /* 表格完全拉滿 100%，並使用 fixed 版面確保欄位比例精準 */
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0; }
+        th, td { padding: 14px 15px; text-align: left; border: none; border-bottom: 1px solid #e1e8ed; word-wrap: break-word; }
+        th { background-color: #f8f9fa; font-weight: 600; color: #2c3e50; }
+        tr:hover { background-color: #f8f9fa; }
+        tr:last-child td { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -187,11 +204,11 @@
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th>書名</th>
-                        <th>中文歌名</th>
-                        <th>英文歌名</th>
-                        <th>作曲家</th>
-                        <th style="width: 80px; text-align: center;">操作</th>
+                        <th style="width: 25%;">書名</th>
+                        <th style="width: 23%;">中文歌名</th>
+                        <th style="width: 23%;">英文歌名</th>
+                        <th style="width: 17%;">作曲家</th>
+                        <th style="width: 12%; text-align: right;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,7 +218,7 @@
                             <td>${item.songNameZh || '-'}</td>
                             <td>${item.songNameEn || '-'}</td>
                             <td>${item.composer || '-'}</td>
-                            <td style="text-align: center;">
+                            <td style="text-align: right;">
                                 <button class="btn-delete" onclick="deleteRecord('${item.id}', this)">🗑️ 刪除</button>
                             </td>
                         </tr>
