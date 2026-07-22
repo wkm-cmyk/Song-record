@@ -1,4 +1,4 @@
-<PRACTICE MAKES PERFECT >
+<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -36,7 +36,7 @@
         .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; background: #fff; width: 100%; }
         .publisher-title { background-color: #34495e; color: white; padding: 12px 15px; margin: 0; font-size: 1.1em; font-weight: 600; }
         
-        /* 🌟 強制破解所有外來樣式，確保表格 100% 撐滿整個外框 */
+        /* 強制表格 100% 撐滿整個外框 */
         .publisher-group table { 
             display: table !important;
             width: 100% !important; 
@@ -51,7 +51,7 @@
         .publisher-group tbody { display: table-row-group !important; width: 100% !important; }
         .publisher-group tr { display: table-row !important; width: 100% !important; }
 
-        /* 🌟 徹底清空直行網格線，僅留水平底線，並對齊欄位 */
+        /* 徹底清空直行網格線，僅留水平底線 */
         .publisher-group th, 
         .publisher-group td { 
             display: table-cell !important;
@@ -69,7 +69,7 @@
             color: #2c3e50 !important; 
         }
 
-        /* 將最右側「操作/刪除按鈕」靠右對齊，貼近邊界 */
+        /* 最右側刪除按鈕欄位靠右對齊 */
         .publisher-group th:last-child, 
         .publisher-group td:last-child { 
             text-align: right !important; 
@@ -237,7 +237,6 @@
             });
 
             const table = document.createElement('table');
-            /* 🌟 設定最合適的欄位拉伸比例，將刪除按鈕推至最右邊 */
             table.innerHTML = `
                 <thead>
                     <tr>
@@ -245,7 +244,7 @@
                         <th style="width: 22%;">中文歌名</th>
                         <th style="width: 22%;">英文歌名</th>
                         <th style="width: 18%;">作曲家</th>
-                        <th style="width: 13%;">操作</th>
+                        <th style="width: 13%;"></th>
                     </tr>
                 </thead>
                 <tbody>
