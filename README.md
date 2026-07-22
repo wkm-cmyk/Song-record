@@ -15,14 +15,39 @@
         button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-add { background-color: #27ae60; color: white; }
         .btn-add:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .btn-save-edit { background-color: #e67e22; color: white; }
+        .btn-cancel-edit { background-color: #95a5a6; color: white; }
         .btn-export { background-color: #2980b9; color: white; }
         
-        /* 刪除按鈕：強制不換行 */
+        /* 操作按鈕容器：強制上下（垂直）排列並靠右 */
+        .btn-action-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        /* 修改按鈕樣式 */
+        .btn-edit { 
+            background-color: #f39c12; 
+            color: white; 
+            padding: 5px 10px; 
+            font-size: 0.85em; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            border: none !important; 
+            white-space: nowrap !important; 
+            display: inline-block;
+        }
+        .btn-edit:hover { background-color: #d68910; }
+
+        /* 刪除按鈕樣式 */
         .btn-delete { 
             background-color: #e74c3c; 
             color: white; 
-            padding: 6px 12px; 
-            font-size: 0.9em; 
+            padding: 5px 10px; 
+            font-size: 0.85em; 
             border-radius: 4px; 
             cursor: pointer; 
             border: none !important; 
@@ -55,7 +80,7 @@
         .publisher-group th, 
         .publisher-group td { 
             display: table-cell !important;
-            padding: 14px 15px !important; 
+            padding: 12px 15px !important; 
             text-align: left !important; 
             border: none !important; 
             border-bottom: 1px solid #e1e8ed !important; 
@@ -69,7 +94,7 @@
             color: #2c3e50 !important; 
         }
 
-        /* 最右側刪除按鈕欄位靠右對齊 */
+        /* 最右側按鈕欄位靠右對齊 */
         .publisher-group th:last-child, 
         .publisher-group td:last-child { 
             text-align: right !important; 
@@ -85,7 +110,7 @@
 <div class="container">
     <h1>📚 出版物記錄與搜尋庫</h1>
 
-    <!-- 輸入表單：綁定 datalist 以實現自動提示與比對功能 -->
+    <!-- 輸入表單 -->
     <div class="form-group">
         <input type="text" id="publisher" list="publisherList" placeholder="出版社 (Publisher) *" required autocomplete="off">
         <datalist id="publisherList"></datalist>
@@ -102,7 +127,8 @@
         <input type="text" id="composer" list="composerList" placeholder="作曲家 (Composer) (選填)" autocomplete="off">
         <datalist id="composerList"></datalist>
 
-        <button class="btn-add" onclick="addRecord()">➕ 新增記錄</button>
+        <button id="submitBtn" class="btn-add" onclick="handleSubmit()">➕ 新增記錄</button>
+        <button id="cancelBtn" class="btn-cancel-edit" onclick="cancelEdit()" style="display: none;">✖️ 取消</button>
         <button class="btn-export" onclick="exportToExcel()">📊 匯出至 Excel</button>
     </div>
 
@@ -115,6 +141,7 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxLNIX5-v2gyojTBAylf93lMpOxBM4B2G2xw5CG8ZfhHLw9YViVRE6W5y211u--N4H9/exec';
     
     let records = [];
+    let editingId = null; // 當前正在修改的記錄 ID
 
     async function loadRecords() {
         const container = document.getElementById('resultsContainer');
@@ -130,7 +157,6 @@
         }
     }
 
-    /* 動態更新輸入框的比對選單 (Datalist) */
     function updateDatalists() {
         const fields = [
             { id: 'publisherList', key: 'publisher' },
@@ -156,56 +182,112 @@
         });
     }
 
-    async function addRecord() {
+    // 處理「新增」或「儲存修改」
+    async function handleSubmit() {
         const publisher = document.getElementById('publisher').value.trim();
         const bookName = document.getElementById('bookName').value.trim();
         const songNameZh = document.getElementById('songNameZh').value.trim();
         const songNameEn = document.getElementById('songNameEn').value.trim();
         const composer = document.getElementById('composer').value.trim();
-        const btn = document.querySelector('.btn-add');
+        const btn = document.getElementById('submitBtn');
 
         if (!publisher || !bookName) {
             alert("請至少輸入「出版社」與「書名」！");
             return;
         }
 
-        const newRecord = { action: 'add', publisher, bookName, songNameZh, songNameEn, composer };
-        btn.textContent = '⏳ 儲存中...';
+        const isEdit = editingId !== null;
+        const payload = { 
+            action: isEdit ? 'edit' : 'add', 
+            id: editingId,
+            publisher, bookName, songNameZh, songNameEn, composer 
+        };
+
+        btn.textContent = '⏳ 處理中...';
         btn.disabled = true;
 
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
-                body: JSON.stringify(newRecord),
+                body: JSON.stringify(payload),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const result = await response.json();
-            newRecord.id = result.id;
-            records.push(newRecord);
-            
-            document.getElementById('publisher').value = '';
-            document.getElementById('bookName').value = '';
-            document.getElementById('songNameZh').value = '';
-            document.getElementById('songNameEn').value = '';
-            document.getElementById('composer').value = '';
 
+            if (isEdit) {
+                // 更新本機資料
+                const idx = records.findIndex(r => r.id === editingId);
+                if (idx !== -1) {
+                    records[idx] = { ...records[idx], publisher, bookName, songNameZh, songNameEn, composer };
+                }
+            } else {
+                // 新增至本機資料
+                payload.id = result.id;
+                records.push(payload);
+            }
+
+            clearForm();
             updateDatalists();
             renderRecords();
-            alert("✅ 新增成功！");
+            // 已完全移除原本的 alert 提醒！
         } catch (error) {
             console.error('儲存失敗:', error);
             alert("❌ 儲存失敗，請重試。");
         } finally {
-            btn.textContent = '➕ 新增記錄';
-            btn.disabled = false;
+            resetSubmitBtn();
         }
+    }
+
+    // 開始修改：將資料帶入輸入框
+    function startEdit(id) {
+        const item = records.find(r => r.id === id);
+        if (!item) return;
+
+        editingId = id;
+        document.getElementById('publisher').value = item.publisher || '';
+        document.getElementById('bookName').value = item.bookName || '';
+        document.getElementById('songNameZh').value = item.songNameZh || '';
+        document.getElementById('songNameEn').value = item.songNameEn || '';
+        document.getElementById('composer').value = item.composer || '';
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = '💾 儲存修改';
+        submitBtn.className = 'btn-save-edit';
+        
+        document.getElementById('cancelBtn').style.display = 'inline-block';
+
+        // 平滑滾動到頂部表單
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 取消修改
+    function cancelEdit() {
+        clearForm();
+        resetSubmitBtn();
+    }
+
+    function clearForm() {
+        editingId = null;
+        document.getElementById('publisher').value = '';
+        document.getElementById('bookName').value = '';
+        document.getElementById('songNameZh').value = '';
+        document.getElementById('songNameEn').value = '';
+        document.getElementById('composer').value = '';
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    function resetSubmitBtn() {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = '➕ 新增記錄';
+        submitBtn.className = 'btn-add';
+        submitBtn.disabled = false;
     }
 
     async function deleteRecord(id, btnElement) {
         if (!confirm("⚠️ 確定要刪除這筆記錄嗎？(此動作無法復原)")) {
             return; 
         }
-        btnElement.textContent = '⏳ 刪除中...';
+        btnElement.textContent = '⏳...';
         btnElement.disabled = true;
 
         try {
@@ -215,6 +297,9 @@
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             records = records.filter(record => record.id !== id);
+            
+            if (editingId === id) cancelEdit();
+
             updateDatalists();
             renderRecords();
         } catch (error) {
@@ -268,7 +353,6 @@
             title.textContent = `🏛️ ${publisher}`;
             groupDiv.appendChild(title);
 
-            // 先依「書名」排序，再依「中英文歌名」排序
             groupedData[publisher].sort((a, b) => {
                 let cmp = customSort(a.bookName, b.bookName);
                 if (cmp !== 0) return cmp;
@@ -277,7 +361,6 @@
                 return customSort(a.songNameEn, b.songNameEn);
             });
 
-            // 🌟 每當遇到新的書名時，次序從 1 開始重新計算
             let currentBook = '';
             let seq = 0;
             const itemsWithSeq = groupedData[publisher].map(item => {
@@ -296,10 +379,10 @@
                     <tr>
                         <th style="width: 8%;">次序</th>
                         <th style="width: 24%;">書名</th>
-                        <th style="width: 22%;">中文歌名</th>
+                        <th style="width: 21%;">中文歌名</th>
                         <th style="width: 21%;">英文歌名</th>
                         <th style="width: 15%;">作曲家</th>
-                        <th style="width: 10%;"></th>
+                        <th style="width: 11%;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -311,7 +394,10 @@
                             <td>${item.songNameEn || '-'}</td>
                             <td>${item.composer || '-'}</td>
                             <td>
-                                <button class="btn-delete" onclick="deleteRecord('${item.id}', this)">🗑️ 刪除</button>
+                                <div class="btn-action-group">
+                                    <button class="btn-edit" onclick="startEdit('${item.id}')">✏️ 修改</button>
+                                    <button class="btn-delete" onclick="deleteRecord('${item.id}', this)">🗑️ 刪除</button>
+                                </div>
                             </td>
                         </tr>
                     `).join('')}
@@ -328,7 +414,6 @@
             return;
         }
 
-        // 排序資料並加入次序
         const sortedRecords = [...records].sort((a, b) => {
             let cmp = customSort(a.publisher, b.publisher);
             if (cmp !== 0) return cmp;
