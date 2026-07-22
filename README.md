@@ -19,7 +19,7 @@
         .btn-cancel-edit { background-color: #95a5a6; color: white; }
         .btn-export { background-color: #2980b9; color: white; }
         
-        /* 新增：拍照辨識按鈕樣式 */
+        /* 拍照辨識按鈕樣式 */
         .btn-scan { background-color: #8e44ad; color: white; }
         .btn-scan:disabled { background-color: #bb8fce; cursor: not-allowed; }
 
@@ -135,7 +135,7 @@
         <button id="submitBtn" class="btn-add" onclick="handleSubmit()">➕ 新增記錄</button>
         <button id="cancelBtn" class="btn-cancel-edit" onclick="cancelEdit()" style="display: none;">✖️ 取消</button>
         
-        <!-- 新增：拍照 / 相片辨識按鈕 -->
+        <!-- 拍照 / 相片辨識按鈕 -->
         <button id="scanBtn" class="btn-scan" onclick="document.getElementById('imageInput').click()">📷 拍照辨識</button>
         <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;" onchange="processImage(this)">
         
@@ -148,7 +148,8 @@
 </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxLNIX5-v2gyojTBAylf93lMpOxBM4B2G2xw5CG8ZfhHLw9YViVRE6W5y211u--N4H9/exec';
+    // 已更新為您最新的 Google Apps Script 網址
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzZy7LGHsPHwV1Hr9AKoF-SRE0ao6Sv_e_FJHc7sgEXmWEJvVE8tusdRwNuGfDsqHWC/exec';
     
     let records = [];
     let editingId = null;
