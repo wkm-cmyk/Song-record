@@ -1,4 +1,4 @@
-
+<PRACTICE MAKES PERFECT >
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
@@ -33,35 +33,43 @@
         .btn-delete:disabled { background-color: #f5b7b1; cursor: not-allowed; }
         
         .search-bar { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #3498db; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
-        .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; background: #fff; }
+        .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; background: #fff; width: 100%; }
         .publisher-title { background-color: #34495e; color: white; padding: 12px 15px; margin: 0; font-size: 1.1em; font-weight: 600; }
         
-        /* 🌟 核心修正：強制表格滿版 100%，並徹底取消直行網格線 */
+        /* 🌟 強制破解所有外來樣式，確保表格 100% 撐滿整個外框 */
         .publisher-group table { 
+            display: table !important;
             width: 100% !important; 
+            min-width: 100% !important;
             border-collapse: collapse !important; 
             table-layout: fixed !important; 
             margin: 0 !important;
             border: none !important;
         }
 
-        /* 🌟 核心修正：完全清空直行邊框 (border: none)，僅留底部水平細線 */
+        .publisher-group thead { display: table-header-group !important; width: 100% !important; }
+        .publisher-group tbody { display: table-row-group !important; width: 100% !important; }
+        .publisher-group tr { display: table-row !important; width: 100% !important; }
+
+        /* 🌟 徹底清空直行網格線，僅留水平底線，並對齊欄位 */
         .publisher-group th, 
         .publisher-group td { 
+            display: table-cell !important;
             padding: 14px 15px !important; 
-            text-align: left; 
+            text-align: left !important; 
             border: none !important; 
             border-bottom: 1px solid #e1e8ed !important; 
-            word-wrap: break-word;
+            word-wrap: break-word !important;
+            vertical-align: middle !important;
         }
 
         .publisher-group th { 
             background-color: #f8f9fa !important; 
-            font-weight: 600; 
-            color: #2c3e50; 
+            font-weight: 600 !important; 
+            color: #2c3e50 !important; 
         }
 
-        /* 最後一欄（操作/刪除按鈕）靠右對齊 */
+        /* 將最右側「操作/刪除按鈕」靠右對齊，貼近邊界 */
         .publisher-group th:last-child, 
         .publisher-group td:last-child { 
             text-align: right !important; 
@@ -229,15 +237,15 @@
             });
 
             const table = document.createElement('table');
-            /* 🌟 設定 5 個欄位各佔 20% 均勻展開 */
+            /* 🌟 設定最合適的欄位拉伸比例，將刪除按鈕推至最右邊 */
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th style="width: 20%;">書名</th>
-                        <th style="width: 20%;">中文歌名</th>
-                        <th style="width: 20%;">英文歌名</th>
-                        <th style="width: 20%;">作曲家</th>
-                        <th style="width: 20%;">操作</th>
+                        <th style="width: 25%;">書名</th>
+                        <th style="width: 22%;">中文歌名</th>
+                        <th style="width: 22%;">英文歌名</th>
+                        <th style="width: 18%;">作曲家</th>
+                        <th style="width: 13%;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
