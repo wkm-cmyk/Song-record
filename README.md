@@ -23,7 +23,7 @@
         .btn-scan { background-color: #8e44ad; color: white; }
         .btn-scan:disabled { background-color: #bb8fce; cursor: not-allowed; }
 
-        /* 操作按鈕容器：強制上下（垂直）排列並靠右 */
+        /* 操作按鈕容器：垂直排列並靠右 */
         .btn-action-group {
             display: flex;
             flex-direction: column;
@@ -65,7 +65,6 @@
         .publisher-group { margin-bottom: 30px; border: 1px solid #e1e8ed; border-radius: 6px; overflow: hidden; background: #fff; width: 100%; }
         .publisher-title { background-color: #34495e; color: white; padding: 12px 15px; margin: 0; font-size: 1.1em; font-weight: 600; }
         
-        /* 強制表格 100% 撐滿整個外框 */
         .publisher-group table { 
             display: table !important;
             width: 100% !important; 
@@ -80,7 +79,6 @@
         .publisher-group tbody { display: table-row-group !important; width: 100% !important; }
         .publisher-group tr { display: table-row !important; width: 100% !important; }
 
-        /* 徹底清空直行網格線，僅留水平底線 */
         .publisher-group th, 
         .publisher-group td { 
             display: table-cell !important;
@@ -98,7 +96,6 @@
             color: #2c3e50 !important; 
         }
 
-        /* 最右側按鈕欄位靠右對齊 */
         .publisher-group th:last-child, 
         .publisher-group td:last-child { 
             text-align: right !important; 
@@ -148,8 +145,8 @@
 </div>
 
 <script>
-    // 已更新為您最新的 Google Apps Script 網址
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzZy7LGHsPHwV1Hr9AKoF-SRE0ao6Sv_e_FJHc7sgEXmWEJvVE8tusdRwNuGfDsqHWC/exec';
+    // 已更新為最新部署的 Google Apps Script 網址
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwe_NyV5IEWyDrJFU98jt9lT2Pltb4Vi4ZNdjUYOybovj66B4GbEz1RF_taPtmS0pbU/exec';
     
     let records = [];
     let editingId = null;
@@ -506,4 +503,3 @@
 </script>
 </body>
 </html>
-](https://script.google.com/macros/s/AKfycbwe_NyV5IEWyDrJFU98jt9lT2Pltb4Vi4ZNdjUYOybovj66B4GbEz1RF_taPtmS0pbU/exec)
