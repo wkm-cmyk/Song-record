@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f5f7fa; margin: 0; padding: 20px; color: #333; }
-    .container { max-width: 950px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .container { max-width: 1100px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     h1 { color: #1a56db; font-size: 24px; margin-bottom: 20px; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 15px; }
     input { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; }
@@ -18,11 +18,10 @@
     .btn-green { background-color: #10b981; color: white; }
     .btn-blue { background-color: #0284c7; color: white; }
     .btn-toggle { background-color: #6366f1; color: white; padding: 6px 12px; font-size: 13px; }
-    .btn-danger { background-color: #ef4444; color: white; padding: 4px 8px; font-size: 12px; }
-    .btn-edit { background-color: #f59e0b; color: white; padding: 4px 8px; font-size: 12px; }
+    .btn-danger { background-color: #ef4444; color: white; padding: 5px 10px; font-size: 12px; }
+    .btn-edit { background-color: #f59e0b; color: white; padding: 5px 10px; font-size: 12px; }
     .search-bar { width: 100%; padding: 12px 16px; border: 1px solid #3b82f6; border-radius: 8px; margin-bottom: 20px; font-size: 15px; }
     
-    /* 出版社主題分組樣式 */
     .publisher-card { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; overflow: hidden; background: #fff; }
     .publisher-header { background-color: #f8fafc; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
     .publisher-title { font-size: 16px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
@@ -31,9 +30,22 @@
     .publisher-content { display: none; padding: 0; }
     .publisher-content.show { display: block; }
     
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-    th { background-color: #f1f5f9; color: #475569; font-weight: 600; font-size: 13px; }
+    /* 均勻分頁與滿版設定 */
+    table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #f1f5f9; font-size: 14px; word-break: break-word; }
+    th:last-child, td:last-child { border-right: none; }
+    th { background-color: #f8fafc; color: #475569; font-weight: 600; font-size: 13px; }
+    
+    /* 設定每一欄的平均比例 */
+    .col-seq { width: 7%; text-align: center; }
+    .col-book { width: 22%; }
+    .col-zh { width: 22%; }
+    .col-en { width: 22%; }
+    .col-composer { width: 17%; }
+    .col-action { width: 10%; text-align: center; }
+
+    .action-btn-group { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .seq-badge { background: #f3f4f6; color: #4b5563; font-weight: 600; padding: 3px 6px; border-radius: 4px; font-size: 12px; display: inline-block; }
     .status-msg { text-align: center; color: #ef4444; font-weight: 600; margin: 15px 0; display: none; }
     .loading { text-align: center; color: #64748b; padding: 20px; }
   </style>
@@ -43,7 +55,6 @@
 <div class="container">
   <h1>📚 出版物記錄與搜尋庫</h1>
 
-  <!-- 輸入表單 -->
   <form id="recordForm" onsubmit="handleFormSubmit(event)">
     <input type="hidden" id="editId">
     <div class="form-grid">
@@ -60,13 +71,10 @@
     </div>
   </form>
 
-  <!-- 搜尋框 -->
   <input type="text" id="searchInput" class="search-bar" placeholder="🔍 搜尋出版社、書名、中英文歌名或作曲家..." oninput="filterData()">
 
-  <!-- 狀態提示 -->
   <div id="statusMsg" class="status-msg">❌ 資料載入失敗，請檢查網路連線或 API 網址。</div>
 
-  <!-- 出版社分組容器 -->
   <div id="publisherList">
     <div class="loading">⏳ 資料載入中...</div>
   </div>
@@ -76,7 +84,6 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbwe_NyV5IEWyDrJFU98jt9lT2Pltb4Vi4ZNdjUYOybovj66B4GbEz1RF_taPtmS0pbU/exec";
   let allRecords = [];
 
-  // 1. 初始化讀取資料
   async function loadData() {
     try {
       document.getElementById('statusMsg').style.display = 'none';
@@ -90,7 +97,6 @@
     }
   }
 
-  // 2. 依出版社分組並渲染畫面
   function renderGroupedData(records) {
     const container = document.getElementById('publisherList');
     if (records.length === 0) {
@@ -98,7 +104,6 @@
       return;
     }
 
-    // 依出版社進行 Grouping
     const grouped = {};
     records.forEach(item => {
       const pub = item.publisher || "未分類出版社";
@@ -108,7 +113,6 @@
       grouped[pub].push(item);
     });
 
-    // 取得所有出版社並按照 A-Z / 筆劃排序
     const publishers = Object.keys(grouped).sort((a, b) => 
       a.localeCompare(b, ['zh-HK', 'zh-TW', 'en'], { numeric: true, sensitivity: 'base' })
     );
@@ -134,23 +138,27 @@
             <table>
               <thead>
                 <tr>
-                  <th>書名</th>
-                  <th>中文歌名</th>
-                  <th>英文歌名</th>
-                  <th>作曲家</th>
-                  <th style="width:100px;">操作</th>
+                  <th class="col-seq">次序</th>
+                  <th class="col-book">書名</th>
+                  <th class="col-zh">中文歌名</th>
+                  <th class="col-en">英文歌名</th>
+                  <th class="col-composer">作曲家</th>
+                  <th class="col-action">操作</th>
                 </tr>
               </thead>
               <tbody>
                 ${pubRecords.map(item => `
                   <tr>
-                    <td><strong>${escapeHtml(item.bookName)}</strong></td>
-                    <td>${escapeHtml(item.songNameZh)}</td>
-                    <td>${escapeHtml(item.songNameEn)}</td>
-                    <td>${escapeHtml(item.composer)}</td>
-                    <td>
-                      <button onclick="editRecord('${item.id}')" class="btn btn-edit">編輯</button>
-                      <button onclick="deleteRecord('${item.id}')" class="btn btn-danger">刪除</button>
+                    <td class="col-seq"><span class="seq-badge">#${item.seqNumber || '-'}</span></td>
+                    <td class="col-book"><strong>${escapeHtml(item.bookName)}</strong></td>
+                    <td class="col-zh">${escapeHtml(item.songNameZh)}</td>
+                    <td class="col-en">${escapeHtml(item.songNameEn)}</td>
+                    <td class="col-composer">${escapeHtml(item.composer)}</td>
+                    <td class="col-action">
+                      <div class="action-btn-group">
+                        <button onclick="editRecord('${item.id}')" class="btn btn-edit">編輯</button>
+                        <button onclick="deleteRecord('${item.id}')" class="btn btn-danger">刪除</button>
+                      </div>
                     </td>
                   </tr>
                 `).join('')}
@@ -164,11 +172,9 @@
     container.innerHTML = html;
   }
 
-  // 3. 切換出版社內容的顯示 / 隱藏
   function togglePublisher(contentId, btnId) {
     const content = document.getElementById(contentId);
     const btn = document.getElementById(btnId);
-    
     if (content.classList.contains('show')) {
       content.classList.remove('show');
       btn.innerHTML = '▼ 顯示書名與內容';
@@ -178,7 +184,6 @@
     }
   }
 
-  // 4. 表單提交（新增或編輯）
   async function handleFormSubmit(e) {
     e.preventDefault();
     const editId = document.getElementById('editId').value;
@@ -210,7 +215,6 @@
     }
   }
 
-  // 5. 編輯點擊填入
   function editRecord(id) {
     const item = allRecords.find(r => String(r.id) === String(id));
     if (!item) return;
@@ -227,7 +231,6 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 6. 刪除記錄
   async function deleteRecord(id) {
     if (!confirm("確定要刪除這筆記錄嗎？")) return;
     try {
@@ -241,7 +244,6 @@
     }
   }
 
-  // 7. 重置表單
   function resetForm() {
     document.getElementById('recordForm').reset();
     document.getElementById('editId').value = '';
@@ -250,7 +252,6 @@
     submitBtn.className = "btn btn-green";
   }
 
-  // 8. 前端搜尋 (搜尋時自動展開吻合的出版社)
   function filterData() {
     const query = document.getElementById('searchInput').value.toLowerCase();
     if (!query) {
@@ -267,21 +268,18 @@
     );
 
     renderGroupedData(filtered);
-    
-    // 搜尋時預設將符合的出版社全部展開
     document.querySelectorAll('.publisher-content').forEach(el => el.classList.add('show'));
     document.querySelectorAll('.btn-toggle').forEach(btn => btn.innerHTML = '▲ 隱藏內容');
   }
 
-  // 9. 匯出 Excel (CSV 格式)
   function exportToExcel() {
     if (allRecords.length === 0) {
       alert("目前沒有可匯出的資料！");
       return;
     }
-    let csvContent = "\uFEFF出版社,書名,中文歌名,英文歌名,作曲家\n";
+    let csvContent = "\uFEFF次序,出版社,書名,中文歌名,英文歌名,作曲家\n";
     allRecords.forEach(r => {
-      csvContent += `"${r.publisher}","${r.bookName}","${r.songNameZh}","${r.songNameEn}","${r.composer}"\n`;
+      csvContent += `"${r.seqNumber || ''}","${r.publisher}","${r.bookName}","${r.songNameZh}","${r.songNameEn}","${r.composer}"\n`;
     });
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -293,13 +291,11 @@
     document.body.removeChild(link);
   }
 
-  // XSS 防護輔助函數
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  // 載入資料
   loadData();
 </script>
 
