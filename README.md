@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>出版物記錄與搜尋庫</title>
+    <title>歌曲記錄</title>
     <!-- 引入 SheetJS 函式庫以支援匯出 Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -18,10 +18,6 @@
         .btn-save-edit { background-color: #e67e22; color: white; }
         .btn-cancel-edit { background-color: #95a5a6; color: white; }
         .btn-export { background-color: #2980b9; color: white; }
-        
-        /* 拍照辨識按鈕樣式 */
-        .btn-scan { background-color: #8e44ad; color: white; }
-        .btn-scan:disabled { background-color: #bb8fce; cursor: not-allowed; }
 
         /* 操作按鈕容器：垂直排列並靠右 */
         .btn-action-group {
@@ -109,7 +105,7 @@
 <body>
 
 <div class="container">
-    <h1>📚 出版物記錄與搜尋庫</h1>
+    <h1>📚 歌曲記錄</h1>
 
     <!-- 輸入表單 -->
     <div class="form-group">
@@ -132,9 +128,6 @@
         <button id="submitBtn" class="btn-add" onclick="handleSubmit()">➕ 新增記錄</button>
         <button id="cancelBtn" class="btn-cancel-edit" onclick="cancelEdit()" style="display: none;">✖️ 取消</button>
         
-        <!-- 拍照 / 相片辨識按鈕 -->
-        <button id="scanBtn" class="btn-scan" onclick="document.getElementById('imageInput').click()">📷 拍照辨識</button>
-        <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;" onchange="processImage(this)">
         
         <button class="btn-export" onclick="exportToExcel()">📊 匯出至 Excel</button>
     </div>
