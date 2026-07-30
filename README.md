@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Song-record 出版物記錄庫</title>
+  <title>Song-record 歌曲記錄</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
@@ -71,7 +71,7 @@
 <body>
 
 <div class="container">
-  <h1>📚 出版物記錄與搜尋庫</h1>
+  <h1>📚 歌曲記錄</h1>
 
   <form id="recordForm" onsubmit="handleFormSubmit(event)">
     <input type="hidden" id="editId">
