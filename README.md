@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -6,54 +6,65 @@
   <title>Song-record 出版物記錄庫</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f5f7fa; margin: 0; padding: 20px; color: #333; font-size: 15px; }
     
-    /* 擴大電腦版畫面寬度至 1400px */
-    .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    /* 設定全頁基本字體大小為 15px */
+    body { background-color: #f5f7fa; margin: 0; padding: 20px; color: #333; font-size: 15px; line-height: 1.5; }
+    
+    /* 擴大電腦版畫面：解析度設為 1440px 寬度，滿版比例 100% */
+    .container { 
+      width: 100%; 
+      max-width: 1440px; 
+      margin: 0 auto; 
+      background: white; 
+      padding: 30px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    }
     
     h1 { color: #1a56db; font-size: 26px; margin-bottom: 20px; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 15px; }
     
-    /* 輸入框字體與輸入內容設為 15px */
+    /* 輸入框設定：字體 15px */
     input { width: 100%; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px; outline: none; transition: border-color 0.2s; }
     input:focus { border-color: #1a56db; }
     
+    /* 按鈕樣式設定：字體 15px */
     .btn-group { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
     .btn { padding: 12px 20px; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity 0.2s; }
     .btn:hover { opacity: 0.9; }
     .btn-green { background-color: #10b981; color: white; }
     .btn-blue { background-color: #0284c7; color: white; }
-    .btn-toggle { background-color: #6366f1; color: white; padding: 8px 16px; font-size: 14px; }
-    .btn-danger { background-color: #ef4444; color: white; padding: 6px 12px; font-size: 13px; }
-    .btn-edit { background-color: #f59e0b; color: white; padding: 6px 12px; font-size: 13px; }
+    .btn-toggle { background-color: #6366f1; color: white; padding: 8px 16px; font-size: 15px; }
+    .btn-danger { background-color: #ef4444; color: white; padding: 6px 14px; font-size: 15px; }
+    .btn-edit { background-color: #f59e0b; color: white; padding: 6px 14px; font-size: 15px; }
     
     .search-bar { width: 100%; padding: 14px 18px; border: 1px solid #3b82f6; border-radius: 8px; margin-bottom: 25px; font-size: 15px; }
     
     .publisher-card { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 20px; overflow: hidden; background: #fff; }
     .publisher-header { background-color: #f8fafc; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; }
     .publisher-title { font-size: 18px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 10px; }
-    .book-count { font-size: 13px; background: #e0e7ff; color: #3730a3; padding: 3px 10px; border-radius: 12px; font-weight: normal; }
+    .book-count { font-size: 14px; background: #e0e7ff; color: #3730a3; padding: 3px 10px; border-radius: 12px; font-weight: normal; }
     
     .publisher-content { display: none; padding: 0; }
     .publisher-content.show { display: block; }
     
-    /* 均勻分頁與滿版設定，表格字體統一為 15px */
+    /* 表格設定：字體統一為 15px */
     table { width: 100%; table-layout: fixed; border-collapse: collapse; }
     th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #f1f5f9; font-size: 15px; word-break: break-word; }
     th:last-child, td:last-child { border-right: none; }
     th { background-color: #f8fafc; color: #475569; font-weight: 600; font-size: 15px; }
     
-    /* 欄位平均比例調整 (配合 1400px 大畫面) */
+    /* 1440px 寬度下的欄位比例設定 */
     .col-seq { width: 6%; text-align: center; }
     .col-book { width: 23%; }
-    .col-zh { width: 23%; }
-    .col-en { width: 23%; }
+    .col-zh { width: 22%; }
+    .col-en { width: 22%; }
     .col-composer { width: 16%; }
-    .col-action { width: 9%; text-align: center; }
+    .col-action { width: 11%; text-align: center; }
 
     .action-btn-group { display: flex; gap: 6px; justify-content: center; align-items: center; }
-    .seq-badge { background: #f3f4f6; color: #4b5563; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 15px; display: inline-block; }
-    .status-msg { text-align: center; color: #ef4444; font-weight: 600; margin: 15px 0; display: none; }
+    .seq-badge { background: #f3f4f6; color: #4b5563; font-weight: 600; padding: 4px 10px; border-radius: 4px; font-size: 15px; display: inline-block; }
+    .status-msg { text-align: center; color: #ef4444; font-weight: 600; margin: 15px 0; display: none; font-size: 15px; }
     .loading { text-align: center; color: #64748b; padding: 20px; font-size: 15px; }
   </style>
 </head>
@@ -156,7 +167,6 @@
               <tbody>
                 ${pubRecords.map(item => `
                   <tr>
-                    <!-- 💡 已移除 # 號，只留純數字 -->
                     <td class="col-seq"><span class="seq-badge">${item.seqNumber || '-'}</span></td>
                     <td class="col-book"><strong>${escapeHtml(item.bookName)}</strong></td>
                     <td class="col-zh">${escapeHtml(item.songNameZh)}</td>
