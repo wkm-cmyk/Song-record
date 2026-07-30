@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
@@ -6,7 +6,7 @@
   <title>Song-record 出版物記錄庫</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f5f7fa; margin: 0; padding: 20px; color: #333; }
+    body { background-color: #f5f7fa; margin: 0; padding: 20px; color: #333; font-size: 15px; }
     
     /* 擴大電腦版畫面寬度至 1400px */
     .container { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -52,7 +52,7 @@
     .col-action { width: 9%; text-align: center; }
 
     .action-btn-group { display: flex; gap: 6px; justify-content: center; align-items: center; }
-    .seq-badge { background: #f3f4f6; color: #4b5563; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 13px; display: inline-block; }
+    .seq-badge { background: #f3f4f6; color: #4b5563; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 15px; display: inline-block; }
     .status-msg { text-align: center; color: #ef4444; font-weight: 600; margin: 15px 0; display: none; }
     .loading { text-align: center; color: #64748b; padding: 20px; font-size: 15px; }
   </style>
@@ -156,7 +156,8 @@
               <tbody>
                 ${pubRecords.map(item => `
                   <tr>
-                    <td class="col-seq"><span class="seq-badge">#${item.seqNumber || '-'}</span></td>
+                    <!-- 💡 已移除 # 號，只留純數字 -->
+                    <td class="col-seq"><span class="seq-badge">${item.seqNumber || '-'}</span></td>
                     <td class="col-book"><strong>${escapeHtml(item.bookName)}</strong></td>
                     <td class="col-zh">${escapeHtml(item.songNameZh)}</td>
                     <td class="col-en">${escapeHtml(item.songNameEn)}</td>
