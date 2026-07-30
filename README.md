@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Song-record 歌曲記錄</title>
+  <title>Song-record 出版物記錄庫</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
     /* 設定全頁基本字體大小為 15px */
     body { background-color: #f5f7fa; margin: 0; padding: 20px; color: #333; font-size: 15px; line-height: 1.5; }
     
-    /* 擴大電腦版畫面：解析度設為 1440px 寬度，滿版比例 100% */
+    /* 擴大電腦版畫面：解析度設為 1440px 寬度，滿版比例 80% */
     .container { 
       width: 100%; 
       max-width: 1440px; 
@@ -54,16 +54,28 @@
     th:last-child, td:last-child { border-right: none; }
     th { background-color: #f8fafc; color: #475569; font-weight: 600; font-size: 15px; }
     
-    /* 1440px 寬度下的欄位比例設定 */
-    .col-seq { width: 6%; text-align: center; }
+    /* 調整欄位寬度，微調次序欄位確保有足夠寬度顯示雙位數以上 */
+    .col-seq { width: 8%; text-align: center; }
     .col-book { width: 23%; }
-    .col-zh { width: 22%; }
-    .col-en { width: 22%; }
+    .col-zh { width: 21%; }
+    .col-en { width: 21%; }
     .col-composer { width: 16%; }
     .col-action { width: 11%; text-align: center; }
 
     .action-btn-group { display: flex; gap: 6px; justify-content: center; align-items: center; }
-    .seq-badge { background: #f3f4f6; color: #4b5563; font-weight: 600; padding: 4px 10px; border-radius: 4px; font-size: 15px; display: inline-block; }
+    
+    /* 💡 加上 white-space: nowrap; 強制數字不換行、並排顯示 */
+    .seq-badge { 
+      background: #f3f4f6; 
+      color: #4b5563; 
+      font-weight: 600; 
+      padding: 4px 10px; 
+      border-radius: 4px; 
+      font-size: 15px; 
+      display: inline-block; 
+      white-space: nowrap; 
+    }
+    
     .status-msg { text-align: center; color: #ef4444; font-weight: 600; margin: 15px 0; display: none; font-size: 15px; }
     .loading { text-align: center; color: #64748b; padding: 20px; font-size: 15px; }
   </style>
@@ -71,7 +83,7 @@
 <body>
 
 <div class="container">
-  <h1>📚 歌曲記錄</h1>
+  <h1>📚 出版物記錄與搜尋庫</h1>
 
   <form id="recordForm" onsubmit="handleFormSubmit(event)">
     <input type="hidden" id="editId">
